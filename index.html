@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Competency Checklist Download</title>
+    <title>Competency Checklist Portal</title>
     <style>
         /* This section styles the page to make it look professional */
         body {
@@ -34,7 +34,25 @@
             line-height: 1.6;
             font-size: 16px;
         }
-        .download-btn, .upload-btn {
+        
+        /* New Dropdown Styles */
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #334155;
+            background-color: #f8fafc;
+            cursor: pointer;
+        }
+        .form-select:focus {
+            outline: none;
+            border-color: #0056b3;
+        }
+
+        .action-btn {
             background-color: #0056b3;
             color: #ffffff;
             padding: 15px 30px;
@@ -47,9 +65,15 @@
             display: inline-block;
             cursor: pointer;
             margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .download-btn:hover, .upload-btn:hover {
+        .action-btn:hover:not(:disabled) {
             background-color: #004494;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         hr {
@@ -69,15 +93,35 @@
             font-size: 14px;
             color: #334155;
         }
+
+        /* Hide step 2 initially */
+        #step2 {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Acute Care Training</h1>
+    <div class="container" id="step1">
+        <h1>Competency Checklist</h1>
+        <p>Please select your specific program from the menu below to proceed to your requirements.</p>
+        
+        <select id="programSelect" class="form-select">
+            <option value="" disabled selected>Select Program</option>
+            <option value="Acute Care">Acute Care</option>
+            <option value="Ambulatory Care">Ambulatory Care</option>
+            <option value="Emergency Care">Emergency Care</option>
+            <option value="Surgical Care">Surgical Care</option>
+        </select>
+
+        <button id="proceedBtn" class="action-btn" disabled>PROCEED</button>
+    </div>
+
+    <div class="container" id="step2">
+        <h1 id="programHeader">Program Training</h1>
         <p>Please download your Competency Checklist below. Once filled out, rename the file with your actual surname and upload it here.</p>
         
-        <a href="SURNAME_Competency_Checklist_for_Acute_Care.pdf" class="download-btn" download>
+        <a href="#" id="downloadLink" class="action-btn" download>
             Download Checklist (PDF)
         </a>
 
@@ -88,13 +132,46 @@
             <form id="uploadForm">
                 <input type="file" id="fileUpload" accept="application/pdf" required>
                 <br>
-                <button type="submit" class="upload-btn" id="submitBtn" style="background-color: #16a34a;">Upload File</button>
+                <button type="submit" class="action-btn" id="submitBtn" style="background-color: #16a34a;">Upload File</button>
             </form>
             <p id="statusMessage" style="font-size: 14px; color: #16a34a; font-weight: bold; display: none; margin-bottom: 0;"></p>
         </div>
     </div>
 
     <script>
+        // --- UI NAVIGATION LOGIC ---
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const programSelect = document.getElementById('programSelect');
+        const proceedBtn = document.getElementById('proceedBtn');
+        
+        const programHeader = document.getElementById('programHeader');
+        const downloadLink = document.getElementById('downloadLink');
+
+        // Enable button only when a program is selected
+        programSelect.addEventListener('change', function() {
+            if (this.value !== "") {
+                proceedBtn.disabled = false;
+            }
+        });
+
+        // Switch screens and configure the download dynamically
+        proceedBtn.addEventListener('click', function() {
+            const selectedProgram = programSelect.value;
+            
+            // Set the dynamic Header
+            programHeader.innerText = selectedProgram + " Training";
+            
+            // Format the filename (e.g., "Acute Care" becomes "Acute_Care")
+            const formattedName = selectedProgram.replace(/ /g, "_");
+            downloadLink.href = `SURNAME_Competency_Checklist_for_${formattedName}.pdf`;
+
+            // Hide Step 1, Show Step 2
+            step1.style.display = 'none';
+            step2.style.display = 'block';
+        });
+
+        // --- GOOGLE DRIVE UPLOAD LOGIC ---
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -111,6 +188,7 @@
                 status.innerText = "Uploading " + file.name + "... Please wait.";
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = "0.5";
+                submitBtn.innerText = "Uploading...";
 
                 const reader = new FileReader();
                 
@@ -125,7 +203,7 @@
                     };
 
                     // !!! PASTE YOUR DEPLOYED WEB APP URL HERE !!!
-                    const scriptUrl = "https://script.google.com/macros/s/AKfycbwA91EtnZSvM413QevrxBQWeT7PP8BTFk-Mnm7In73tfFnBjNNZYgNkUfCbHX37fPzAmQ/exec";
+                    const scriptUrl = "YOUR_WEB_APP_URL_HERE";
 
                     fetch(scriptUrl, {
                         method: "POST",
@@ -150,6 +228,7 @@
                         // Re-enable button
                         submitBtn.disabled = false;
                         submitBtn.style.opacity = "1";
+                        submitBtn.innerText = "Upload File";
                     });
                 };
                 
