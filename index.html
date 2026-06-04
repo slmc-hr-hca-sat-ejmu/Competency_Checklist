@@ -30,23 +30,44 @@
         }
         p {
             color: #555555;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             line-height: 1.6;
             font-size: 16px;
         }
-        .download-btn {
-            background-color: #0056b3; /* St. Luke's Blue style */
+        .download-btn, .upload-btn {
+            background-color: #0056b3;
             color: #ffffff;
             padding: 15px 30px;
             text-decoration: none;
+            border: none;
             border-radius: 5px;
             font-weight: bold;
             font-size: 16px;
             transition: background-color 0.3s ease;
             display: inline-block;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
-        .download-btn:hover {
+        .download-btn:hover, .upload-btn:hover {
             background-color: #004494;
+        }
+        
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e2e8f0;
+            margin: 30px 0;
+        }
+        .upload-section {
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e1;
+        }
+        input[type="file"] {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #334155;
         }
     </style>
 </head>
@@ -54,12 +75,89 @@
 
     <div class="container">
         <h1>Acute Care Training</h1>
-        <p>Please download your Competency Checklist below. Once downloaded, rename the file with your actual surname and upload it to the link provided in email.</p>
+        <p>Please download your Competency Checklist below. Once filled out, rename the file with your actual surname and upload it here.</p>
         
         <a href="SURNAME_Competency_Checklist_for_Acute_Care.pdf" class="download-btn" download>
             Download Checklist (PDF)
         </a>
+
+        <hr>
+
+        <div class="upload-section">
+            <h3 style="color: #2c3e50; margin-top: 0;">Submit Your Checklist</h3>
+            <form id="uploadForm">
+                <input type="file" id="fileUpload" accept="application/pdf" required>
+                <br>
+                <button type="submit" class="upload-btn" id="submitBtn" style="background-color: #16a34a;">Upload File</button>
+            </form>
+            <p id="statusMessage" style="font-size: 14px; color: #16a34a; font-weight: bold; display: none; margin-bottom: 0;"></p>
+        </div>
     </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileUpload');
+            const status = document.getElementById('statusMessage');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                
+                // Update UI to show uploading state
+                status.style.display = 'block';
+                status.style.color = '#eab308'; // Yellow for pending
+                status.innerText = "Uploading " + file.name + "... Please wait.";
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    // Extract the base64 string from the Data URL
+                    const base64Data = event.target.result.split(',')[1];
+                    
+                    const payload = {
+                        filename: file.name,
+                        mimeType: file.type,
+                        base64: base64Data
+                    };
+
+                    // !!! PASTE YOUR DEPLOYED WEB APP URL HERE !!!
+                    const scriptUrl = "https://script.google.com/macros/s/AKfycbwA91EtnZSvM413QevrxBQWeT7PP8BTFk-Mnm7In73tfFnBjNNZYgNkUfCbHX37fPzAmQ/exec";
+
+                    fetch(scriptUrl, {
+                        method: "POST",
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            status.style.color = '#16a34a'; // Green for success
+                            status.innerText = "Success! " + file.name + " has been uploaded securely.";
+                            fileInput.value = ""; // Clear the input
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        status.style.color = '#ef4444'; // Red for error
+                        status.innerText = "Error uploading file. Please try again.";
+                        console.error("Upload Error:", error);
+                    })
+                    .finally(() => {
+                        // Re-enable button
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = "1";
+                    });
+                };
+                
+                // Read the file as a Data URL (which produces a base64 encoded string)
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 
 </body>
 </html>
