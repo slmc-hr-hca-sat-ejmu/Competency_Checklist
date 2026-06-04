@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Competency Checklist Portal</title>
     <style>
-        /* This section styles the page to make it look professional */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
@@ -34,8 +33,6 @@
             line-height: 1.6;
             font-size: 16px;
         }
-        
-        /* New Dropdown Styles */
         .form-select {
             width: 100%;
             padding: 12px;
@@ -51,7 +48,6 @@
             outline: none;
             border-color: #0056b3;
         }
-
         .action-btn {
             background-color: #0056b3;
             color: #ffffff;
@@ -75,7 +71,6 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
         hr {
             border: 0;
             height: 1px;
@@ -93,8 +88,6 @@
             font-size: 14px;
             color: #334155;
         }
-
-        /* Hide step 2 initially */
         #step2 {
             display: none;
         }
@@ -111,6 +104,7 @@
             <option value="Acute Care">Acute Care</option>
             <option value="Ambulatory Care">Ambulatory Care</option>
             <option value="Emergency Care">Emergency Care</option>
+            <option value="Medical Technologist">Medical Technologist</option>
             <option value="Surgical Care">Surgical Care</option>
         </select>
 
@@ -139,34 +133,35 @@
     </div>
 
     <script>
+        // --- DATA MAPPING ---
+        const pdfFiles = {
+            "Acute Care": "SURNAME_Acute-Care-Competency-Checklist.pdf",
+            "Ambulatory Care": "SURNAME_Ambulatory-Care-Competency-Checklist.pdf",
+            "Emergency Care": "SURNAME_Emergency-Care-Competency-Checklist.pdf",
+            "Medical Technologist": "SURNAME_Medical-Technologist-Competency-Checklist.pdf",
+            "Surgical Care": "SURNAME_Surgical-Care-Competency-Checklist.pdf"
+        };
+
         // --- UI NAVIGATION LOGIC ---
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
         const programSelect = document.getElementById('programSelect');
         const proceedBtn = document.getElementById('proceedBtn');
-        
         const programHeader = document.getElementById('programHeader');
         const downloadLink = document.getElementById('downloadLink');
 
-        // Enable button only when a program is selected
         programSelect.addEventListener('change', function() {
-            if (this.value !== "") {
-                proceedBtn.disabled = false;
-            }
+            if (this.value !== "") proceedBtn.disabled = false;
         });
 
-        // Switch screens and configure the download dynamically
         proceedBtn.addEventListener('click', function() {
             const selectedProgram = programSelect.value;
             
-            // Set the dynamic Header
+            // Set dynamic Header and exact PDF filename
             programHeader.innerText = selectedProgram + " Training";
-            
-            // Format the filename (e.g., "Acute Care" becomes "Acute_Care")
-            const formattedName = selectedProgram.replace(/ /g, "_");
-            downloadLink.href = `SURNAME_Competency_Checklist_for_${formattedName}.pdf`;
+            downloadLink.href = pdfFiles[selectedProgram];
 
-            // Hide Step 1, Show Step 2
+            // Switch screens
             step1.style.display = 'none';
             step2.style.display = 'block';
         });
@@ -178,13 +173,13 @@
             const fileInput = document.getElementById('fileUpload');
             const status = document.getElementById('statusMessage');
             const submitBtn = document.getElementById('submitBtn');
+            const selectedProgram = document.getElementById('programSelect').value;
             
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 
-                // Update UI to show uploading state
                 status.style.display = 'block';
-                status.style.color = '#eab308'; // Yellow for pending
+                status.style.color = '#eab308';
                 status.innerText = "Uploading " + file.name + "... Please wait.";
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = "0.5";
@@ -193,17 +188,17 @@
                 const reader = new FileReader();
                 
                 reader.onload = function(event) {
-                    // Extract the base64 string from the Data URL
                     const base64Data = event.target.result.split(',')[1];
                     
                     const payload = {
                         filename: file.name,
                         mimeType: file.type,
-                        base64: base64Data
+                        base64: base64Data,
+                        program: selectedProgram // Passing the specific program to the backend
                     };
 
                     // !!! PASTE YOUR DEPLOYED WEB APP URL HERE !!!
-                    const scriptUrl = "YOUR_WEB_APP_URL_HERE";
+                    const scriptUrl = "https://script.google.com/macros/s/AKfycbwA91EtnZSvM413QevrxBQWeT7PP8BTFk-Mnm7In73tfFnBjNNZYgNkUfCbHX37fPzAmQ/exec";
 
                     fetch(scriptUrl, {
                         method: "POST",
@@ -212,27 +207,25 @@
                     .then(response => response.json())
                     .then(data => {
                         if(data.status === 'success') {
-                            status.style.color = '#16a34a'; // Green for success
+                            status.style.color = '#16a34a';
                             status.innerText = "Success! " + file.name + " has been uploaded securely.";
-                            fileInput.value = ""; // Clear the input
+                            fileInput.value = "";
                         } else {
                             throw new Error(data.message);
                         }
                     })
                     .catch(error => {
-                        status.style.color = '#ef4444'; // Red for error
+                        status.style.color = '#ef4444';
                         status.innerText = "Error uploading file. Please try again.";
                         console.error("Upload Error:", error);
                     })
                     .finally(() => {
-                        // Re-enable button
                         submitBtn.disabled = false;
                         submitBtn.style.opacity = "1";
                         submitBtn.innerText = "Upload File";
                     });
                 };
                 
-                // Read the file as a Data URL (which produces a base64 encoded string)
                 reader.readAsDataURL(file);
             }
         });
