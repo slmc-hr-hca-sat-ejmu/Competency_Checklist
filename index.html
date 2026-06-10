@@ -101,7 +101,9 @@
         
         <select id="programSelect" class="form-select">
             <option value="" disabled selected>Select Program</option>
-            <option value="Acute Care">Acute Care</option>
+            <option value="Acute Care - Part I">Acute Care - Part I</option>
+            <option value="Acute Care - Part II">Acute Care - Part II</option>
+            <option value="Acute Care - Part III">Acute Care - Part III</option>
             <option value="Ambulatory Care">Ambulatory Care</option>
             <option value="Emergency Care">Emergency Care</option>
             <option value="Medical Technologist">Medical Technologist</option>
@@ -135,7 +137,9 @@
     <script>
         // --- DATA MAPPING ---
         const pdfFiles = {
-            "Acute Care": "SURNAME_Acute-Care-Competency-Checklist.pdf",
+            "Acute Care - Part I": "SURNAME_Acute-Care-Competency-Checklist-Part-I.pdf",
+            "Acute Care - Part II": "SURNAME_Acute-Care-Competency-Checklist-Part-II.pdf",
+            "Acute Care - Part III": "SURNAME_Acute-Care-Competency-Checklist-Part-III.pdf",
             "Ambulatory Care": "SURNAME_Ambulatory-Care-Competency-Checklist.pdf",
             "Emergency Care": "SURNAME_Emergency-Care-Competency-Checklist.pdf",
             "Medical Technologist": "SURNAME_Medical-Technologist-Competency-Checklist.pdf",
@@ -158,7 +162,7 @@
             const selectedProgram = programSelect.value;
             
             // Set dynamic Header and exact PDF filename
-            programHeader.innerText = selectedProgram + " Competency Checklist";
+            programHeader.innerText = selectedProgram + " Checklist";
             downloadLink.href = pdfFiles[selectedProgram];
 
             // Switch screens
