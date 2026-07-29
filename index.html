@@ -11,8 +11,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px 0;
+            box-sizing: border-box;
         }
         .container {
             background-color: #ffffff;
@@ -23,82 +25,69 @@
             max-width: 500px;
             width: 90%;
         }
-        h1 {
-            color: #2c3e50;
-            margin-top: 0;
-        }
-        p {
-            color: #555555;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            font-size: 16px;
-        }
+        h1 { color: #2c3e50; margin-top: 0; }
+        p { color: #555555; margin-bottom: 20px; line-height: 1.6; font-size: 16px; }
         .form-select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: #334155;
-            background-color: #f8fafc;
-            cursor: pointer;
+            width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 5px;
+            font-size: 16px; margin-bottom: 20px; color: #334155; background-color: #f8fafc; cursor: pointer;
         }
-        .form-select:focus {
-            outline: none;
-            border-color: #0056b3;
-        }
+        .form-select:focus { outline: none; border-color: #0056b3; }
         .action-btn {
-            background-color: #0056b3;
-            color: #ffffff;
-            padding: 15px 30px;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-            display: inline-block;
-            cursor: pointer;
-            margin-bottom: 10px;
-            width: 100%;
-            box-sizing: border-box;
+            background-color: #0056b3; color: #ffffff; padding: 15px 30px; text-decoration: none;
+            border: none; border-radius: 5px; font-weight: bold; font-size: 16px;
+            transition: background-color 0.3s ease; display: inline-block; cursor: pointer;
+            margin-bottom: 10px; width: 100%; box-sizing: border-box;
         }
-        .action-btn:hover:not(:disabled) {
-            background-color: #004494;
+        .action-btn:hover:not(:disabled) { background-color: #004494; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        hr { border: 0; height: 1px; background: #e2e8f0; margin: 30px 0; }
+        
+        .declaration-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #0056b3;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e3a8a;
+            border-radius: 4px;
+            line-height: 1.5;
+            text-transform: uppercase;
         }
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background: #e2e8f0;
-            margin: 30px 0;
-        }
-        .upload-section {
+
+        .section-box {
             background-color: #f8fafc;
-            padding: 20px;
+            padding: 24px;
             border-radius: 8px;
             border: 2px dashed #cbd5e1;
+            margin-bottom: 20px;
+            text-align: left;
         }
-        input[type="file"] {
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #334155;
+
+        input[type="file"] { margin-bottom: 15px; font-size: 14px; color: #334155; width: 100%; }
+        #step2 { display: none; }
+        .form-label { text-align: left; font-size: 14px; font-weight: bold; color: #334155; margin-bottom: 6px; display: block; }
+        .text-input {
+            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; margin-bottom: 15px; box-sizing: border-box; color: #334155; background-color: #ffffff;
         }
-        #step2 {
-            display: none;
-        }
+        .text-input:focus { outline: none; border-color: #0056b3; }
+        .signature-wrapper { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; position: relative; margin-bottom: 5px; overflow: hidden; }
+        .signature-pad { width: 100%; height: 140px; display: block; cursor: crosshair; }
+        .clear-btn { background-color: #ef4444; color: white; border: none; padding: 5px 10px; font-size: 12px; border-radius: 3px; cursor: pointer; margin-bottom: 15px; float: right; }
+        .clear-btn:hover { background-color: #dc2626; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+        .status-msg { font-size: 14px; font-weight: bold; margin-top: 10px; display: none; text-align: center; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
 
+    <!-- STEP 1: Program Selection -->
     <div class="container" id="step1">
         <h1>Competency Checklist</h1>
         <p>Please select your specific program from the menu below to proceed to your requirements.</p>
-        
         <select id="programSelect" class="form-select">
             <option value="" disabled selected>Select Program</option>
             <option value="Acute Care">Acute Care</option>
@@ -107,33 +96,59 @@
             <option value="Medical Technologist">Medical Technologist</option>
             <option value="Surgical Care">Surgical Care</option>
         </select>
-
         <button id="proceedBtn" class="action-btn" disabled>PROCEED</button>
     </div>
 
+    <!-- STEP 2: Sign, Download, & Upload -->
     <div class="container" id="step2">
         <h1 id="programHeader">Program Competency Checklist</h1>
-        <p>Please download your Competency Checklist below. Once filled out, rename the file with your actual surname and upload it here.</p>
+        <p>Complete the declaration and signature below to download your checklist.</p>
         
-        <a href="#" id="downloadLink" class="action-btn" download>
-            Download Checklist (PDF)
-        </a>
+        <!-- SECTION 1: Declaration, Signature & Download -->
+        <div class="section-box">
+            <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 15px;">1. Sign & Download Checklist</h3>
+            
+            <div class="declaration-box">
+                "I WILL ACCOMPLISH THE FILE AS PART OF MY COMPLETION FOR SYSTEMS AND TECHNICAL TRAINING"
+            </div>
+
+            <label class="form-label" for="fullName">Full Name:</label>
+            <input type="text" id="fullName" class="text-input" placeholder="e.g., John Doe" required>
+
+            <label class="form-label">Digital Signature:</label>
+            <div class="signature-wrapper">
+                <canvas id="signatureCanvas" class="signature-pad"></canvas>
+            </div>
+            <div class="clearfix">
+                <button type="button" id="clearSigBtn" class="clear-btn">Clear Signature</button>
+            </div>
+
+            <button type="button" id="downloadBtn" class="action-btn">Download Checklist (PDF)</button>
+            <p id="downloadStatus" class="status-msg"></p>
+        </div>
 
         <hr>
 
-        <div class="upload-section">
-            <h3 style="color: #2c3e50; margin-top: 0;">Submit Your Checklist</h3>
+        <!-- SECTION 2: Upload Completed PDF -->
+        <div class="section-box" id="uploadSection" style="opacity: 0.5;">
+            <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 15px;">2. Submit Completed Requirements</h3>
+            <p style="font-size: 14px; text-align: left; margin-bottom: 15px;">
+                Once filled out, rename your file with your surname and upload it below.
+            </p>
+
             <form id="uploadForm">
-                <input type="file" id="fileUpload" accept="application/pdf" required>
-                <br>
-                <button type="submit" class="action-btn" id="submitBtn" style="background-color: #16a34a;">Upload File</button>
+                <label class="form-label" for="fileUpload">Upload Completed PDF:</label>
+                <input type="file" id="fileUpload" accept="application/pdf" disabled required>
+
+                <button type="submit" class="action-btn" id="submitBtn" style="background-color: #16a34a; margin-top: 10px;" disabled>
+                    Upload & Submit
+                </button>
             </form>
-            <p id="statusMessage" style="font-size: 14px; color: #16a34a; font-weight: bold; display: none; margin-bottom: 0;"></p>
+            <p id="statusMessage" class="status-msg"></p>
         </div>
     </div>
 
     <script>
-        // --- DATA MAPPING ---
         const pdfFiles = {
             "Acute Care": "[SURNAME]_Acute-Care-Competency-Checklist.pdf",
             "Ambulatory Care": "[SURNAME]_Ambulatory-Care-Competency-Checklist.pdf",
@@ -142,13 +157,38 @@
             "Surgical Care": "[SURNAME]_Surgical-Care-Competency-Checklist.pdf"
         };
 
-        // --- UI NAVIGATION LOGIC ---
+        let savedName = "";
+        let savedSignatureDataUrl = "";
+
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
         const programSelect = document.getElementById('programSelect');
         const proceedBtn = document.getElementById('proceedBtn');
         const programHeader = document.getElementById('programHeader');
-        const downloadLink = document.getElementById('downloadLink');
+
+        const fileUpload = document.getElementById('fileUpload');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadSection = document.getElementById('uploadSection');
+        const downloadStatus = document.getElementById('downloadStatus');
+
+        // Setup Signature Pad
+        const canvas = document.getElementById('signatureCanvas');
+        const signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgb(255, 255, 255)', 
+            penColor: 'rgb(0, 0, 128)'             
+        });
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            
+            const context = canvas.getContext("2d");
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            signaturePad.clear(); 
+        }
 
         programSelect.addEventListener('change', function() {
             if (this.value !== "") proceedBtn.disabled = false;
@@ -156,48 +196,98 @@
 
         proceedBtn.addEventListener('click', function() {
             const selectedProgram = programSelect.value;
-            
-            // Set dynamic Header and exact PDF filename
             programHeader.innerText = selectedProgram + " Checklist";
-            downloadLink.href = pdfFiles[selectedProgram];
-
-            // Switch screens
             step1.style.display = 'none';
             step2.style.display = 'block';
+            resizeCanvas();
         });
 
-        // --- GOOGLE DRIVE UPLOAD LOGIC ---
+        document.getElementById('clearSigBtn').addEventListener('click', function() {
+            signaturePad.clear();
+            const context = canvas.getContext("2d");
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // Download Action: Validates name & signature first, then downloads PDF
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const nameInput = document.getElementById('fullName');
+
+            if (!nameInput.value.trim()) {
+                downloadStatus.style.display = 'block';
+                downloadStatus.style.color = '#ef4444';
+                downloadStatus.innerText = "Please enter your full name before downloading.";
+                return;
+            }
+
+            if (signaturePad.isEmpty()) {
+                downloadStatus.style.display = 'block';
+                downloadStatus.style.color = '#ef4444';
+                downloadStatus.innerText = "Please draw your signature before downloading.";
+                return;
+            }
+
+            // Store user details for final upload payload
+            savedName = nameInput.value.trim();
+            savedSignatureDataUrl = signaturePad.toDataURL("image/jpeg");
+
+            // Trigger file download
+            const selectedProgram = programSelect.value;
+            const pdfFileName = pdfFiles[selectedProgram];
+
+            const tempLink = document.createElement('a');
+            tempLink.href = pdfFileName;
+            tempLink.download = pdfFileName;
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            // Update UI status and enable the upload section
+            downloadStatus.style.display = 'block';
+            downloadStatus.style.color = '#16a34a';
+            downloadStatus.innerText = "Signature saved & checklist downloaded! You may now upload your completed document below.";
+
+            uploadSection.style.opacity = '1';
+            fileUpload.disabled = false;
+            submitBtn.disabled = false;
+        });
+
+        // Submit Action: Uploads PDF together with stored signature and name
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const fileInput = document.getElementById('fileUpload');
             const status = document.getElementById('statusMessage');
-            const submitBtn = document.getElementById('submitBtn');
-            const selectedProgram = document.getElementById('programSelect').value;
+            const selectedProgram = programSelect.value;
             
+            if (!savedName || !savedSignatureDataUrl) {
+                status.style.display = 'block';
+                status.style.color = '#ef4444';
+                status.innerText = "Please sign and download the checklist first.";
+                return;
+            }
+
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                
                 status.style.display = 'block';
                 status.style.color = '#eab308';
-                status.innerText = "Uploading " + file.name + "... Please wait.";
+                status.innerText = "Uploading data... Please wait.";
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = "0.5";
                 submitBtn.innerText = "Uploading...";
 
                 const reader = new FileReader();
-                
                 reader.onload = function(event) {
                     const base64Data = event.target.result.split(',')[1];
-                    
+
                     const payload = {
                         filename: file.name,
                         mimeType: file.type,
                         base64: base64Data,
-                        program: selectedProgram // Passing the specific program to the backend
+                        program: selectedProgram,
+                        signerName: savedName,    
+                        signature: savedSignatureDataUrl     
                     };
 
-                    // !!! PASTE YOUR DEPLOYED WEB APP URL HERE !!!
                     const scriptUrl = "https://script.google.com/macros/s/AKfycbwA91EtnZSvM413QevrxBQWeT7PP8BTFk-Mnm7In73tfFnBjNNZYgNkUfCbHX37fPzAmQ/exec";
 
                     fetch(scriptUrl, {
@@ -208,7 +298,7 @@
                     .then(data => {
                         if(data.status === 'success') {
                             status.style.color = '#16a34a';
-                            status.innerText = "Success! " + file.name + " has been uploaded securely.";
+                            status.innerText = "Success! Completed checklist submitted securely.";
                             fileInput.value = "";
                         } else {
                             throw new Error(data.message);
@@ -216,20 +306,17 @@
                     })
                     .catch(error => {
                         status.style.color = '#ef4444';
-                        status.innerText = "Error uploading file. Please try again.";
-                        console.error("Upload Error:", error);
+                        status.innerText = "Error uploading data. Please try again.";
                     })
                     .finally(() => {
                         submitBtn.disabled = false;
                         submitBtn.style.opacity = "1";
-                        submitBtn.innerText = "Upload File";
+                        submitBtn.innerText = "Upload & Submit";
                     });
                 };
-                
                 reader.readAsDataURL(file);
             }
         });
     </script>
-
 </body>
 </html>
