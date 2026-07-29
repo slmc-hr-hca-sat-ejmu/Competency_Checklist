@@ -202,28 +202,32 @@
                 reader.onload = function(event) {
                     const pdfBase64Data = event.target.result.split(',')[1];
                     
-                    // Signature JPEG File Extraction & Mapping
+                    // Capture e-signature JPEG
                     const signatureDataUrl = signaturePad.toDataURL("image/jpeg");
                     const sigBase64Data = signatureDataUrl.split(',')[1];
-                    const sigFileName = file.name.replace(/\.[^/.]+$/, "") + "_Signature.jpg";
+
+                    // Format signature filename using user's input full name (e.g., John_Doe_Signature.jpg)
+                    const rawName = nameInput.value.trim();
+                    const sanitizedName = rawName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
+                    const sigFileName = `${sanitizedName}_Signature.jpg`;
 
                     const payload = {
-                        // PDF File Mapping
+                        // PDF File details
                         filename: file.name,
                         mimeType: file.type,
                         base64: pdfBase64Data,
 
-                        // Signature JPEG File Mapping (Mapped identically to the PDF)
+                        // Signature JPEG details mapped to target folder
                         signatureFilename: sigFileName,
                         signatureMimeType: "image/jpeg",
                         signatureBase64: sigBase64Data,
 
-                        // Submission Details
+                        // User & Program details
                         program: selectedProgram,
-                        signerName: nameInput.value
+                        signerName: rawName
                     };
 
-                    // !!! PASTE YOUR NEW DEPLOYED WEB APP URL HERE !!!
+                    // !!! PASTE YOUR DEPLOYED WEB APP URL HERE !!!
                     const scriptUrl = "https://script.google.com/macros/s/AKfycbwA91EtnZSvM413QevrxBQWeT7PP8BTFk-Mnm7In73tfFnBjNNZYgNkUfCbHX37fPzAmQ/exec";
 
                     fetch(scriptUrl, {
