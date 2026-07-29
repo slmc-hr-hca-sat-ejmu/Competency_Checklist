@@ -200,24 +200,27 @@
 
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    const base64Data = event.target.result.split(',')[1];
-                    const signatureDataUrl = signaturePad.toDataURL("image/jpeg"); // Saves explicitly as JPEG
-                    const sigBase64Data = signatureDataUrl.split(',')[1];
+                    const pdfBase64Data = event.target.result.split(',')[1];
                     
-                    // Generate signature filename matching the PDF upload name structure
+                    // Signature JPEG File Extraction & Mapping
+                    const signatureDataUrl = signaturePad.toDataURL("image/jpeg");
+                    const sigBase64Data = signatureDataUrl.split(',')[1];
                     const sigFileName = file.name.replace(/\.[^/.]+$/, "") + "_Signature.jpg";
 
                     const payload = {
+                        // PDF File Mapping
                         filename: file.name,
                         mimeType: file.type,
-                        base64: base64Data,
-                        program: selectedProgram,
-                        signerName: nameInput.value,    
-                        signature: signatureDataUrl,
-                        // Signature mapping attributes aligned with PDF mapping:
+                        base64: pdfBase64Data,
+
+                        // Signature JPEG File Mapping (Mapped identically to the PDF)
                         signatureFilename: sigFileName,
                         signatureMimeType: "image/jpeg",
-                        signatureBase64: sigBase64Data
+                        signatureBase64: sigBase64Data,
+
+                        // Submission Details
+                        program: selectedProgram,
+                        signerName: nameInput.value
                     };
 
                     // !!! PASTE YOUR NEW DEPLOYED WEB APP URL HERE !!!
