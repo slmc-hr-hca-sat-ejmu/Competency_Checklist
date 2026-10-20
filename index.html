@@ -69,10 +69,7 @@
         .clear-btn:hover { background-color: #dc2626; }
         .clearfix::after { content: ""; clear: both; display: table; }
     </style>
-    <!-- Signature Canvas Engine -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-    <!-- PDF Stamping Engine -->
-    <script src="https://unpkg.com/pdf-lib@1.17.9/dist/pdf-lib.min.js"></script>
 </head>
 <body>
 
@@ -140,10 +137,11 @@
         const programHeader = document.getElementById('programHeader');
         const downloadLink = document.getElementById('downloadLink');
 
-        // Setup Signature Pad with transparent background for clean PDF overlay
+        // Initialize Signature Pad with white background to ensure clean JPEG output
         const canvas = document.getElementById('signatureCanvas');
         const signaturePad = new SignaturePad(canvas, {
-            penColor: 'rgb(0, 0, 128)'
+            backgroundColor: 'rgb(255, 255, 255)', 
+            penColor: 'rgb(0, 0, 128)'             
         });
 
         function resizeCanvas() {
@@ -151,7 +149,11 @@
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad.clear();
+            
+            const context = canvas.getContext("2d");
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            signaturePad.clear(); 
         }
 
         programSelect.addEventListener('change', function() {
@@ -169,16 +171,19 @@
 
         document.getElementById('clearSigBtn').addEventListener('click', function() {
             signaturePad.clear();
+            const context = canvas.getContext("2d");
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(0, 0, canvas.width, canvas.height);
         });
 
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const fileInput = document.getElementById('fileUpload');
             const nameInput = document.getElementById('fullName');
             const status = document.getElementById('statusMessage');
             const submitBtn = document.getElementById('submitBtn');
             const selectedProgram = document.getElementById('programSelect').value;
-
+            
             if (signaturePad.isEmpty()) {
                 status.style.display = 'block';
                 status.style.color = '#ef4444';
@@ -186,67 +191,40 @@
                 return;
             }
 
-            if (fileInput.files.length === 0) return;
-
-            status.style.display = 'block';
-            status.style.color = '#eab308';
-            status.innerText = "Stamping signature onto PDF and uploading... Please wait.";
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = "0.5";
-            submitBtn.innerText = "Uploading...";
-
-            try {
+            if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-
-                // 1. Load the original PDF into pdf-lib
-                const existingPdfBytes = await file.arrayBuffer();
-                const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-
-                // 2. Export signature as transparent PNG and embed into PDF
-                const signatureDataUrl = signaturePad.toDataURL("image/png");
-                const sigBase64Data = signatureDataUrl.split(',')[1];
-                const sigImageBytes = await fetch(signatureDataUrl).then(res => res.arrayBuffer());
-                const sigImage = await pdfDoc.embedPng(sigImageBytes);
-
-                // 3. Target the last page of the document
-                const pages = pdfDoc.getPages();
-                const lastPage = pages[pages.length - 1];
-
-                // 4. Draw signature and signer information at the bottom of the page
-                lastPage.drawImage(sigImage, {
-                    x: 60,
-                    y: 70,
-                    width: 140,
-                    height: 55
-                });
-
-                const rawName = nameInput.value.trim();
-                lastPage.drawText(`Digitally Signed by: ${rawName} | Date: ${new Date().toLocaleDateString()}`, {
-                    x: 60,
-                    y: 55,
-                    size: 9
-                });
-
-                // 5. Serialize the stamped PDF to binary and convert to Base64
-                const modifiedPdfBytes = await pdfDoc.save();
-                const signedBlob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-
-                const sanitizedName = rawName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
-                const sigFileName = `${sanitizedName}_Signature.png`;
+                status.style.display = 'block';
+                status.style.color = '#eab308';
+                status.innerText = "Uploading PDF and signature... Please wait.";
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+                submitBtn.innerText = "Uploading...";
 
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    const finalBase64Pdf = event.target.result.split(',')[1];
+                    const pdfBase64Data = event.target.result.split(',')[1];
+                    
+                    // Capture e-signature as JPEG base64
+                    const signatureDataUrl = signaturePad.toDataURL("image/jpeg");
+                    const sigBase64Data = signatureDataUrl.split(',')[1];
+
+                    // Format signature filename using user's full name
+                    const rawName = nameInput.value.trim();
+                    const sanitizedName = rawName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
+                    const sigFileName = `${sanitizedName}_Signature.jpg`;
 
                     const payload = {
+                        // PDF File
                         filename: file.name,
-                        mimeType: "application/pdf",
-                        base64: finalBase64Pdf,
+                        mimeType: file.type || "application/pdf",
+                        base64: pdfBase64Data,
 
+                        // Signature JPG File
                         signatureFilename: sigFileName,
-                        signatureMimeType: "image/png",
+                        signatureMimeType: "image/jpeg",
                         signatureBase64: sigBase64Data,
 
+                        // User & Program details
                         program: selectedProgram,
                         signerName: rawName
                     };
@@ -261,11 +239,11 @@
                     .then(data => {
                         if (data.status === 'success') {
                             status.style.color = '#16a34a';
-                            status.innerText = "Success! Stamped PDF and signature recorded in Google Drive.";
+                            status.innerText = "Success! PDF and signature saved to Google Drive.";
                             fileInput.value = "";
-                            nameInput.value = "";
-                            signaturePad.clear();
-                            resizeCanvas();
+                            nameInput.value = ""; 
+                            signaturePad.clear(); 
+                            resizeCanvas();       
                         } else {
                             throw new Error(data.message);
                         }
@@ -280,14 +258,7 @@
                         submitBtn.innerText = "Upload & Submit";
                     });
                 };
-                reader.readAsDataURL(signedBlob);
-
-            } catch (err) {
-                status.style.color = '#ef4444';
-                status.innerText = "Error stamping signature on PDF: " + err.message;
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = "1";
-                submitBtn.innerText = "Upload & Submit";
+                reader.readAsDataURL(file);
             }
         });
     </script>
